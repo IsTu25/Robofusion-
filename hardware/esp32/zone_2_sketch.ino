@@ -7,8 +7,8 @@ const char* ssid = "Wokwi-GUEST";
 const char* password = "";
 
 // UPDATE THIS WITH YOUR URL
-// Make sure it ends in /api/zones/1/readings/
-String serverName = "http://giant-books-think.loca.lt/api/zones/1/readings/";
+// Make sure it ends in /api/zones/2/readings/
+String serverName = "http://giant-books-think.loca.lt/api/zones/2/readings/";
 
 // Pin Definitions
 const int FIRE_PIN = 34; // Potentiometer 1
@@ -66,7 +66,7 @@ void loop() {
   
   float waterMapped = (waterRaw / 4095.0) * 500.0;
 
-  Serial.println("--- Reading ---");
+  Serial.println("--- Reading Zone 2 ---");
   Serial.print("Fire: "); Serial.println(fireMapped);
   Serial.print("Gas: "); Serial.println(gasMapped);
   Serial.print("Water: "); Serial.println(waterMapped);
@@ -77,9 +77,11 @@ void loop() {
     
     http.begin(serverName);
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("X-Zone-API-Key", "key_iot_123"); // Required by backend
+    
+    // API KEY FOR ZONE 2
+    http.addHeader("X-Zone-API-Key", "key_server_456"); // Required by backend
     http.addHeader("bypass-tunnel-reminder", "true"); // Required by localtunnel
-
+    
     // Must match BatchReadingPayload exactly
     String jsonPayload = "{\"readings\":[{";
     jsonPayload += "\"sequence_number\":" + String(millis()) + ",";

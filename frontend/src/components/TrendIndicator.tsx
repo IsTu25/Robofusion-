@@ -4,7 +4,7 @@ type Trend = 'INSUFFICIENT_DATA' | 'TRENDING_UP' | 'TRENDING_DOWN' | 'STABLE' | 
 
 export function TrendIndicator({ trend }: { trend: Trend }) {
   if (!trend || trend === 'INSUFFICIENT_DATA') {
-    return <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>➖ Insufficient Data</span>;
+    return <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>➖</span>;
   }
   
   if (trend === 'TRENDING_UP') {

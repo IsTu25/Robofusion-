@@ -42,14 +42,24 @@ app.include_router(nl_report.router, prefix="/api/nl-report", tags=["nl-report"]
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    import logging
+    logger = logging.getLogger("ws_endpoint")
     await manager.connect(websocket)
+    logger.info(f"WS connected, active={len(manager.active_connections)}")
     try:
         while True:
             # We don't expect messages from the client in this broadcaster,
             # but we need to keep the connection open and listen for disconnects.
             await websocket.receive_text()
     except WebSocketDisconnect:
+        logger.info("WS client disconnected normally")
         manager.disconnect(websocket)
+    except Exception as e:
+        logger.error(f"WS unexpected error: {type(e).__name__}: {e}")
+        manager.disconnect(websocket)
+
+
+
 
 @app.get("/health")
 async def health_check():

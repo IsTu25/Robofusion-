@@ -33,3 +33,11 @@ backups/*.sql
 # Testing
 testing_guide.md
 test_suite.py
+
+# Data / Output
+repomix-output.xml
+repomix-output.txt
+case_full_text.txt
+RoboFusion_1.0_SCS-RG_Round1_Case.pdf
+initial_plan.md
+what_we_accomplished.md

@@ -7,22 +7,18 @@ from app.ws_manager import manager
 logger = logging.getLogger(__name__)
 
 async def process_reading(zone_id: int, payload: ReadingPayload, db: asyncpg.Connection):
-    # 1. Deduplication (check sequence number and boot_id)
-    last_seq = await db.fetchval(
-        "SELECT sequence_number FROM readings WHERE zone_id = $1 AND boot_id = $2 AND sequence_number = $3",
-        zone_id, str(payload.boot_id), payload.sequence_number
-    )
-    if last_seq is not None:
-        return # Duplicate, ignore
-
-    # 2. Persist Reading
-    await db.execute("""
+    # 1. Deduplication (check sequence number and boot_id) via RETURNING id
+    inserted_id = await db.fetchval("""
         INSERT INTO readings 
-        (zone_id, boot_id, sequence_number, fire_raw, gas_raw, water_raw, pir_raw, is_late, ms_since_boot)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        (zone_id, boot_id, sequence_number, fire_raw, gas_raw, water_raw, pir_raw, is_late, ms_since_boot, warmup)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         ON CONFLICT (zone_id, boot_id, sequence_number) DO NOTHING
+        RETURNING id
     """, zone_id, str(payload.boot_id), payload.sequence_number, payload.fire_raw, payload.gas_raw, 
-         payload.water_raw, payload.pir_raw, payload.is_late, payload.ms_since_boot)
+         payload.water_raw, payload.pir_raw, payload.is_late, payload.ms_since_boot, payload.warmup)
+
+    if inserted_id is None:
+        return # Duplicate, ignore
 
     # 3. Late reading bypass: DO NOT process risk or trigger incidents
     if payload.is_late:
@@ -96,14 +92,24 @@ async def process_reading(zone_id: int, payload: ReadingPayload, db: asyncpg.Con
     zone = await db.fetchrow("SELECT status, override_until, override_target_status FROM zones WHERE id = $1", zone_id)
     old_status = zone['status']
 
-    if zone['override_until'] is not None and zone['override_target_status'] is not None:
-        new_status = zone['override_target_status']
-    elif score >= 65:
-        new_status = 'CRITICAL'
+    if score >= 65:
+        computed_status = 'CRITICAL'
     elif score >= 40:
-        new_status = 'WARNING'
+        computed_status = 'WARNING'
     else:
-        new_status = 'SAFE'
+        computed_status = 'SAFE'
+        
+    if zone['override_until'] is not None and zone['override_target_status'] is not None:
+        override_sev = {'SAFE': 0, 'WARNING': 1, 'CRITICAL': 2}.get(zone['override_target_status'], 0)
+        computed_sev = {'SAFE': 0, 'WARNING': 1, 'CRITICAL': 2}.get(computed_status, 0)
+        
+        if computed_sev > override_sev:
+            # Fail-safe: sensor detected higher severity than override. Sensor wins.
+            new_status = computed_status
+        else:
+            new_status = zone['override_target_status']
+    else:
+        new_status = computed_status
 
     # Update state
     await db.execute("""
@@ -184,25 +190,29 @@ async def process_reading(zone_id: int, payload: ReadingPayload, db: asyncpg.Con
             )
             
             if not existing_incident:
-                # Create new incident
-                incident_id = await db.fetchval("""
-                    INSERT INTO incidents (zone_id, severity, hazard_types, risk_score_at_trigger, status)
-                    VALUES ($1, $2, $3, $4, 'ACTIVE')
-                    RETURNING id
-                """, zone_id, new_status, hazards, score)
-                
-                # Log event
-                await db.execute("""
-                    INSERT INTO events (zone_id, incident_id, event_type, old_status, new_status, risk_score, source)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7)
-                """, zone_id, incident_id, 'INCIDENT_STARTED', old_status, new_status, score, 'SYSTEM')
-                
-                await manager.broadcast({
-                    "type": "INCIDENT_STARTED",
-                    "zone_id": zone_id,
-                    "incident_id": incident_id,
-                    "severity": new_status
-                })
+                try:
+                    # Create new incident
+                    incident_id = await db.fetchval("""
+                        INSERT INTO incidents (zone_id, severity, hazard_types, risk_score_at_trigger, status)
+                        VALUES ($1, $2, $3, $4, 'ACTIVE')
+                        RETURNING id
+                    """, zone_id, new_status, hazards, score)
+                    
+                    # Log event
+                    await db.execute("""
+                        INSERT INTO events (zone_id, incident_id, event_type, old_status, new_status, risk_score, source)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    """, zone_id, incident_id, 'INCIDENT_STARTED', old_status, new_status, score, 'SYSTEM')
+                    
+                    await manager.broadcast({
+                        "type": "INCIDENT_STARTED",
+                        "zone_id": zone_id,
+                        "incident_id": incident_id,
+                        "severity": new_status
+                    })
+                except asyncpg.exceptions.UniqueViolationError:
+                    # A concurrent request already created the incident. Safe to ignore.
+                    pass
             
             else:
                 # Incident exists. Escalation check
@@ -246,10 +256,3 @@ async def process_reading(zone_id: int, payload: ReadingPayload, db: asyncpg.Con
                     "incident_id": inc_id
                 })
 
-        await manager.broadcast({
-            "type": "ZONE_STATUS_CHANGED",
-            "zone_id": zone_id,
-            "old_status": old_status,
-            "new_status": new_status,
-            "risk_score": score
-        })

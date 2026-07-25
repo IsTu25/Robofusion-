@@ -60,12 +60,7 @@ export class DashboardWebSocket {
   }
 
   private reconnect() {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error("Max WebSocket reconnect attempts reached.");
-      return;
-    }
-
-    const delay = this.baseReconnectDelay * Math.pow(2, this.reconnectAttempts);
+    const delay = this.baseReconnectDelay * Math.pow(2, Math.min(this.reconnectAttempts, 5));
     console.log(`Reconnecting in ${delay}ms...`);
     this.reconnectAttempts++;
 

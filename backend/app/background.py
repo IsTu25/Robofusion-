@@ -16,7 +16,7 @@ async def auto_resolve_incidents():
                     # 1. Clear expired overrides
                     await db.execute("""
                         UPDATE zones 
-                        SET status = override_target_status, override_until = NULL, override_target_status = NULL 
+                        SET override_until = NULL, override_target_status = NULL 
                         WHERE override_until IS NOT NULL AND override_until <= now()
                     """)
 
@@ -29,7 +29,6 @@ async def auto_resolve_incidents():
                             JOIN zones z ON i.zone_id = z.id
                             WHERE z.status = 'SAFE' 
                               AND i.status IN ('ACTIVE', 'ACKNOWLEDGED')
-                              # Ensure it's been SAFE for at least a few seconds (simplification)
                         )
                         UPDATE incidents
                         SET status = 'RESOLVED', resolved_at = now()
@@ -40,10 +39,28 @@ async def auto_resolve_incidents():
                     
                     for r in resolved:
                         await db.execute("""
-                            INSERT INTO events (zone_id, incident_id, event_type, details)
-                            VALUES ($1, $2, $3, '{"reason": "auto_resolved"}')
+                            INSERT INTO events (zone_id, incident_id, event_type, old_status, new_status, source)
+                            VALUES ($1, $2, $3, 'WARNING', 'SAFE', 'SYSTEM')
                         """, r['zone_id'], r['id'], 'INCIDENT_RESOLVED')
                         
+                    # 3. Mark zones OFFLINE if no reading for 10 seconds (TC23a)
+                    offline_zones = await db.fetch("""
+                        UPDATE zones SET status = 'OFFLINE'
+                        WHERE is_active = true AND status != 'OFFLINE'
+                          AND (last_reading_at IS NULL OR last_reading_at < now() - interval '10 seconds')
+                        RETURNING id
+                    """)
+                    
+                    if offline_zones:
+                        from app.ws_manager import manager
+                        for oz in offline_zones:
+                            await manager.broadcast({
+                                "type": "ZONE_STATUS_CHANGED",
+                                "zone_id": oz['id'],
+                                "new_status": "OFFLINE",
+                                "risk_score": 0,
+                                "trend": "STABLE"
+                            })
         except Exception as e:
             logger.error(f"Error in background resolver: {e}")
             

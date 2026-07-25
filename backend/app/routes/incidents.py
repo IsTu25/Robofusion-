@@ -56,14 +56,24 @@ async def acknowledge_incident(incident_id: int, user: UserContext = Depends(get
     await db.execute("UPDATE incidents SET status = 'ACKNOWLEDGED' WHERE id = $1", incident_id)
     
     await db.execute("""
-        INSERT INTO acknowledgments (incident_id, user_id, notes)
-        VALUES ($1, $2, 'Acknowledged via API')
+        INSERT INTO acknowledgments (incident_id, user_id)
+        VALUES ($1, $2)
     """, incident_id, user.id)
 
+    # Fetch zone_id and status for the events insert and broadcast
+    inc_data = await db.fetchrow("SELECT zone_id, status FROM incidents WHERE id = $1", incident_id)
+
     await db.execute("""
-        INSERT INTO events (zone_id, incident_id, event_type, details)
-        SELECT zone_id, id, 'INCIDENT_ACKNOWLEDGED', '{"user": "' || $2::text || '"}'
-        FROM incidents WHERE id = $1
-    """, incident_id, user.username)
+        INSERT INTO events (zone_id, incident_id, event_type, old_status, new_status, user_id, source)
+        VALUES ($1, $2, 'INCIDENT_ACKNOWLEDGED', $3, 'ACKNOWLEDGED', $4, 'STAFF')
+    """, inc_data['zone_id'], incident_id, inc_data['status'], user.id)
+    
+    from app.ws_manager import manager
+    await manager.broadcast({
+        "type": "INCIDENT_ACKNOWLEDGED",
+        "zone_id": inc_data['zone_id'],
+        "incident_id": incident_id,
+        "user": user.username
+    })
 
     return {"status": "success", "message": "Incident acknowledged"}

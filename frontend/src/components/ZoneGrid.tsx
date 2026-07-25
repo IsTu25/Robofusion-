@@ -35,6 +35,7 @@ export function ZoneGrid() {
     const ws = new DashboardWebSocket(token);
     
     const unsubscribe = ws.subscribe((message) => {
+      console.log("WS MESSAGE RECEIVED:", message);
       if (message.type === 'READING_PROCESSED') {
         setZones(prev => prev.map(z => 
           z.id === message.zone_id 

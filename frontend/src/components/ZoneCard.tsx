@@ -87,10 +87,10 @@ export function ZoneCard({ zone }: { zone: Zone }) {
       </div>
       
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-        <div>🔥 Fire: {zone.fire_raw !== undefined ? zone.fire_raw.toFixed(1) : '-'}</div>
-        <div>💨 Gas: {zone.gas_raw !== undefined ? zone.gas_raw.toFixed(1) : '-'}</div>
-        <div>💧 Water: {zone.water_raw !== undefined ? zone.water_raw.toFixed(1) : '-'}</div>
-        <div>🏃 PIR: {zone.pir_raw !== undefined ? (zone.pir_raw ? 'YES' : 'NO') : '-'}</div>
+        <div>🔥 Fire: {zone.fire_raw != null ? zone.fire_raw.toFixed(1) : '-'}</div>
+        <div>💨 Gas: {zone.gas_raw != null ? zone.gas_raw.toFixed(1) : '-'}</div>
+        <div>💧 Water: {zone.water_raw != null ? zone.water_raw.toFixed(1) : '-'}</div>
+        <div>🏃 PIR: {zone.pir_raw != null ? (zone.pir_raw ? 'YES' : 'NO') : '-'}</div>
       </div>
       
       <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-color)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -98,7 +98,7 @@ export function ZoneCard({ zone }: { zone: Zone }) {
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <TrendIndicator trend={zone.trend} />
           <span style={{ fontWeight: 'bold', color: isCritical ? 'var(--color-critical)' : 'inherit' }}>
-            {zone.risk_score !== undefined ? zone.risk_score.toFixed(1) : '-'}
+            {zone.risk_score != null ? zone.risk_score.toFixed(1) : '-'}
           </span>
         </div>
       </div>

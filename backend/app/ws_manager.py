@@ -22,12 +22,13 @@ class ConnectionManager:
         if message.get("type") == "ZONE_STATUS_CHANGED":
             zone_id = message.get("zone_id")
             if zone_id:
-                self.zone_status_cache[zone_id] = message.get("status")
+                self.zone_status_cache[zone_id] = message.get("new_status")
                 
         dead_connections = []
         for connection in self.active_connections:
             try:
-                await connection.send_json(message)
+                import asyncio
+                await asyncio.wait_for(connection.send_json(message), timeout=2.0)
             except Exception as e:
                 logger.error(f"Error sending message to websocket: {e}")
                 dead_connections.append(connection)

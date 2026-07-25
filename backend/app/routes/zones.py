@@ -14,10 +14,20 @@ router = APIRouter()
 @router.get("/")
 async def list_zones(current_user: UserContext = Depends(get_current_user), db: asyncpg.Connection = Depends(get_db)):
     zones = await db.fetch("""
-        SELECT id, name, status, is_active, override_until, override_target_status, last_reading_at 
-        FROM zones 
-        WHERE is_active = true
-        ORDER BY id ASC
+        SELECT z.id, z.name, z.status, z.is_active, z.override_until, z.override_target_status, z.last_reading_at,
+               r.fire_raw, r.gas_raw, r.water_raw, r.pir_raw,
+               s.last_risk_score as risk_score
+        FROM zones z
+        LEFT JOIN LATERAL (
+            SELECT fire_raw, gas_raw, water_raw, pir_raw 
+            FROM readings 
+            WHERE zone_id = z.id 
+            ORDER BY received_at DESC 
+            LIMIT 1
+        ) r ON true
+        LEFT JOIN zone_hazard_state s ON s.zone_id = z.id
+        WHERE z.is_active = true
+        ORDER BY z.id ASC
     """)
     return {"zones": [dict(z) for z in zones]}
 
