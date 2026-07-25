@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+asyncpg
+bcrypt
+pyjwt
+pydantic
+websockets
+pydantic-settings
+python-multipart
+scikit-learn==1.3.2
+joblib==1.3.2

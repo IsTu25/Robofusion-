@@ -1,0 +1,35 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Node
+node_modules/
+.npm/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Next.js
+.next/
+out/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Custom
+backups/*.sql
+
+# Testing
+testing_guide.md
+test_suite.py

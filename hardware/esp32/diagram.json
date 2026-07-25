@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "author": "Antigravity",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot1",
+      "top": 120,
+      "left": -150,
+      "attrs": { "label": "Fire Sensor" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot2",
+      "top": 200,
+      "left": -150,
+      "attrs": { "label": "Gas Sensor" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot3",
+      "top": 280,
+      "left": -150,
+      "attrs": { "label": "Water Sensor" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": -80,
+      "left": -50,
+      "attrs": { "color": "red", "label": "PIR Motion" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    
+    [ "pot1:VCC", "esp:3V3", "red", [ "v0" ] ],
+    [ "pot1:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "pot1:SIG", "esp:34", "orange", [ "v0" ] ],
+
+    [ "pot2:VCC", "esp:3V3", "red", [ "v0" ] ],
+    [ "pot2:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "pot2:SIG", "esp:35", "green", [ "v0" ] ],
+
+    [ "pot3:VCC", "esp:3V3", "red", [ "v0" ] ],
+    [ "pot3:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "pot3:SIG", "esp:32", "blue", [ "v0" ] ],
+    
+    [ "btn1:1.l", "esp:GND.2", "black", [ "v0" ] ],
+    [ "btn1:2.l", "esp:33", "yellow", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}

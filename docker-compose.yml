@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: robofusion_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-robofusion}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-robofusion_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-robofusion}
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    command: postgres -c max_connections=200
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U robofusion"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: robofusion_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-robofusion}:${POSTGRES_PASSWORD:-robofusion_pass}@db:5432/${POSTGRES_DB:-robofusion}
+      - JWT_SECRET=${JWT_SECRET:-supersecretkey}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+volumes:
+  db_data:
