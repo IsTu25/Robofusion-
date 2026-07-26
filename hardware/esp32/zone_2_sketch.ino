@@ -8,7 +8,7 @@ const char* password = "";
 
 // UPDATE THIS WITH YOUR URL
 // Make sure it ends in /api/zones/2/readings/
-String serverName = "https://cocoa-wager-scrubbed.ngrok-free.dev/api/zones/2/readings/";
+String serverName = "http://highf-103-165-163-193.free.pinggy.net/api/zones/2/readings/";
 
 // Pin Definitions (Sensors)
 const int FIRE_PIN = 34; // Potentiometer 1
@@ -89,11 +89,9 @@ void loop() {
   Serial.print("PIR: "); Serial.println(pirState ? "YES" : "NO");
 
   if(WiFi.status()== WL_CONNECTED){
-    WiFiClientSecure *client = new WiFiClientSecure;
-    client->setInsecure(); // Ignore SSL certificate validation
     HTTPClient http;
       
-    http.begin(*client, serverName);
+    http.begin(serverName);
     http.addHeader("Content-Type", "application/json");
     http.addHeader("X-Zone-API-Key", "key_server_456"); // Required by backend
     http.addHeader("bypass-tunnel-reminder", "true"); // Required by localtunnel
@@ -137,7 +135,6 @@ void loop() {
       Serial.println(httpResponseCode);
     }
     http.end();
-    delete client;
   } else {
     Serial.println("WiFi Disconnected");
   }
