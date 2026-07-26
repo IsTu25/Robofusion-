@@ -8,7 +8,7 @@ const char* password = "";
 
 // UPDATE THIS WITH YOUR URL
 // Make sure it ends in /api/zones/2/readings/
-String serverName = "http://empty-olives-slide.loca.lt/api/zones/2/readings/";
+String serverName = "https://cocoa-wager-scrubbed.ngrok-free.dev/api/zones/2/readings/";
 
 // Pin Definitions (Sensors)
 const int FIRE_PIN = 34; // Potentiometer 1
@@ -93,10 +93,9 @@ void loop() {
     
     http.begin(serverName);
     http.addHeader("Content-Type", "application/json");
-    
-    // API KEY FOR ZONE 2
     http.addHeader("X-Zone-API-Key", "key_server_456"); // Required by backend
     http.addHeader("bypass-tunnel-reminder", "true"); // Required by localtunnel
+    http.addHeader("ngrok-skip-browser-warning", "true"); // Required by ngrok
     
     // Must match BatchReadingPayload exactly
     String jsonPayload = "{\"readings\":[{";
