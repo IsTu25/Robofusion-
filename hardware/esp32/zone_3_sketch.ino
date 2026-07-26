@@ -90,9 +90,8 @@ void loop() {
 
   if(WiFi.status()== WL_CONNECTED){
     WiFiClientSecure *client = new WiFiClientSecure;
-    if(client) {
-      client->setInsecure(); // Ignore SSL certificate validation
-      HTTPClient http;
+    client->setInsecure(); // Ignore SSL certificate validation
+    HTTPClient http;
       
       http.begin(*client, serverName);
       http.addHeader("Content-Type", "application/json");
