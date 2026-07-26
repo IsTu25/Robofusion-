@@ -7,71 +7,26 @@ This document outlines the high-level architecture, data flow, and components of
 The system operates on a modern, event-driven architecture utilizing WebSockets for real-time responsiveness and an ML-enhanced backend for predictive risk analysis.
 
 ```mermaid
-flowchart TD
+flowchart LR
     %% Define Styles
-    classDef hardware fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff
-    classDef backend fill:#2ecc71,stroke:#27ae60,stroke-width:2px,color:#fff
-    classDef database fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff
-    classDef frontend fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff
-    classDef external fill:#f39c12,stroke:#d35400,stroke-width:2px,color:#fff
+    classDef hardware fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff,font-weight:bold
+    classDef backend fill:#2ecc71,stroke:#27ae60,stroke-width:2px,color:#fff,font-weight:bold
+    classDef database fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff,font-weight:bold
+    classDef frontend fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff,font-weight:bold
 
     %% Nodes
-    subgraph tier1 ["Hardware Tier (ESP32 via Wokwi)"]
-        ESP1["Zone 1: IoT Lab Node"]:::hardware
-        ESP2["Zone 2: Server Room Node"]:::hardware
-        ESP3["Zone 3: Data Science Node"]:::hardware
-        SENSORS(("Sensors:\nFire, Gas, Water, PIR")):::hardware
-        ACTUATORS(("Actuators:\nBuzzer, Relay, LEDs")):::hardware
-    end
+    ESP["1. Hardware (ESP32)\nReads Sensors & Alarms"]:::hardware
+    API["2. Backend (FastAPI)\nCalculates Risk Score"]:::backend
+    DB[("3. Database (PostgreSQL)\nStores Incident History")]:::database
+    UI["4. Frontend (Next.js)\nShows Live Map & Alerts"]:::frontend
 
-    subgraph tier2 ["Backend Tier (FastAPI)"]
-        API["REST API Ingestion (/api/zones/readings)"]:::backend
-        RISK["Risk Fusion Engine & Validation Gate"]:::backend
-        ML["Machine Learning Predictor"]:::backend
-        NL["Natural Language Parser (LLM Sim)"]:::backend
-        WS["WebSocket Manager Broadcaster"]:::backend
-    end
-
-    subgraph tier3 ["Persistence Tier"]
-        DB[("PostgreSQL Relational Database")]:::database
-        CACHE[("In-Memory Cache (Actuation State)")]:::database
-    end
-
-    subgraph tier4 ["Frontend Tier (Next.js)"]
-        UI["Interactive Dashboard (React / Next.js)"]:::frontend
-        MAP["Live 2D Map (WebSocket Client)"]:::frontend
-        REPORT["NL Report Input UI Component"]:::frontend
-    end
-
-    %% Edge Connections - Hardware to Backend
-    SENSORS --> ESP1
-    SENSORS --> ESP2
-    SENSORS --> ESP3
-    ESP1 -- "HTTP POST (JSON)\nEvery 1s" --> API
-    ESP2 -- "HTTP POST (JSON)\nEvery 1s" --> API
-    ESP3 -- "HTTP POST (JSON)\nEvery 1s" --> API
+    %% Connections
+    ESP -- "Sends Data\n(Every 1s)" --> API
+    API -- "Saves Data" --> DB
+    API -- "Updates Dashboard\n(Real-Time)" --> UI
     
-    %% Backend Processing
-    API --> RISK
-    RISK <--> ML
-    RISK -- "Writes Raw Data &\nIncident State" --> DB
-    RISK -- "Updates Actuation" --> CACHE
-    
-    %% Hardware Feedback Loop
-    CACHE -- "Instant Actuation Response\n(HTTP 200 OK)" --> API
-    API -- "Buzzer/Relay States" --> ESP1
-    API -- "Buzzer/Relay States" --> ESP2
-    API -- "Buzzer/Relay States" --> ESP3
-    ESP1 --> ACTUATORS
-    
-    %% Real-time Broadcast
-    RISK -- "Emits Events" --> WS
-    WS -- "Live WS Stream" --> MAP
-    WS -- "Live WS Stream" --> UI
-    
-    %% NLP Flow
-    REPORT -- "POST /api/nl-report" --> NL
-    NL -- "Validates & Overrides" --> RISK
+    %% Actuation Feedback
+    API -. "Triggers Alarms" .-> ESP
 ```
 
 ## System Components
