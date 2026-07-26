@@ -7,26 +7,39 @@ This document outlines the high-level architecture, data flow, and components of
 The system operates on a modern, event-driven architecture utilizing WebSockets for real-time responsiveness and an ML-enhanced backend for predictive risk analysis.
 
 ```mermaid
-flowchart LR
-    %% Define Styles
-    classDef hardware fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:#fff,font-weight:bold
-    classDef backend fill:#2ecc71,stroke:#27ae60,stroke-width:2px,color:#fff,font-weight:bold
-    classDef database fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff,font-weight:bold
-    classDef frontend fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:#fff,font-weight:bold
+flowchart TD
+    %% Styling
+    classDef hardware fill:#e74c3c,stroke:#c0392b,color:#fff,stroke-width:2px
+    classDef backend fill:#2ecc71,stroke:#27ae60,color:#fff,stroke-width:2px
+    classDef database fill:#3498db,stroke:#2980b9,color:#fff,stroke-width:2px
+    classDef frontend fill:#9b59b6,stroke:#8e44ad,color:#fff,stroke-width:2px
 
-    %% Nodes
-    ESP["1. Hardware (ESP32)\nReads Sensors & Alarms"]:::hardware
-    API["2. Backend (FastAPI)\nCalculates Risk Score"]:::backend
-    DB[("3. Database (PostgreSQL)\nStores Incident History")]:::database
-    UI["4. Frontend (Next.js)\nShows Live Map & Alerts"]:::frontend
-
-    %% Connections
-    ESP -- "Sends Data\n(Every 1s)" --> API
-    API -- "Saves Data" --> DB
-    API -- "Updates Dashboard\n(Real-Time)" --> UI
+    %% Components
+    SENSORS(("Physical Sensors\n(Fire, Gas, Water, Motion)")):::hardware
+    ESP["ESP32 Microcontrollers\n(Wokwi Simulation)"]:::hardware
     
-    %% Actuation Feedback
-    API -. "Triggers Alarms" .-> ESP
+    API["FastAPI Backend\n(Ingestion & Routing)"]:::backend
+    RISK["Risk Fusion Engine\n(Weights & ML Predictor)"]:::backend
+    WS["WebSocket Manager"]:::backend
+    
+    DB[("PostgreSQL Database\n(Incidents & History)")]:::database
+    
+    UI["Next.js Dashboard\n(Live Map & Alerts)"]:::frontend
+    ACTUATORS(("Local Actuators\n(Relay, Buzzer, LEDs)")):::hardware
+
+    %% Flow
+    SENSORS --> ESP
+    ESP -- "JSON Payload (Every 1s)" --> API
+    API --> RISK
+    
+    RISK -- "Saves State" --> DB
+    RISK -- "Broadcasts Events" --> WS
+    
+    WS -- "Live Updates" --> UI
+    
+    %% Feedback Loop
+    API -. "Returns Alarm States" .-> ESP
+    ESP --> ACTUATORS
 ```
 
 ## System Components
