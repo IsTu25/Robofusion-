@@ -89,10 +89,13 @@ void loop() {
   Serial.print("PIR: "); Serial.println(pirState ? "YES" : "NO");
 
   if(WiFi.status()== WL_CONNECTED){
-    HTTPClient http;
-    
-    http.begin(serverName);
-    http.addHeader("Content-Type", "application/json");
+    WiFiClientSecure *client = new WiFiClientSecure;
+    if(client) {
+      client->setInsecure(); // Ignore SSL certificate validation
+      HTTPClient http;
+      
+      http.begin(*client, serverName);
+      http.addHeader("Content-Type", "application/json");
     http.addHeader("X-Zone-API-Key", "key_iot_123"); // Required by backend
     http.addHeader("bypass-tunnel-reminder", "true"); // Required by localtunnel
     http.addHeader("ngrok-skip-browser-warning", "true"); // Required by ngrok
@@ -135,6 +138,7 @@ void loop() {
       Serial.println(httpResponseCode);
     }
     http.end();
+    delete client;
   } else {
     Serial.println("WiFi Disconnected");
   }
