@@ -67,9 +67,7 @@ async def process_reading(zone_id: int, payload: ReadingPayload, db: asyncpg.Con
         state_dict['pir_last_true_at'] = 'now'
         state_dict['pir_confirmed'] = True
     else:
-        # In a real time-based app, we'd check if (now - pir_last_true_at) > 10s
-        # For this prototype, we'll keep it simple: if fire is active, it stays confirmed
-        pass
+        state_dict['pir_confirmed'] = False
     
     eff_pir = 1.0 if state_dict['pir_confirmed'] else 0.0
 
