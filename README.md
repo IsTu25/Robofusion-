@@ -16,37 +16,37 @@ flowchart TD
     classDef external fill:#f39c12,stroke:#d35400,stroke-width:2px,color:#fff
 
     %% Nodes
-    subgraph "Hardware Tier (ESP32 via Wokwi)"
-        ESP1[Zone 1: IoT Lab Node]:::hardware
-        ESP2[Zone 2: Server Room Node]:::hardware
-        ESP3[Zone 3: Data Science Node]:::hardware
-        SENSORS((Sensors:\nFire, Gas, Water, PIR)):::hardware
-        ACTUATORS((Actuators:\nBuzzer, Relay, LEDs)):::hardware
+    subgraph tier1 ["Hardware Tier (ESP32 via Wokwi)"]
+        ESP1["Zone 1: IoT Lab Node"]:::hardware
+        ESP2["Zone 2: Server Room Node"]:::hardware
+        ESP3["Zone 3: Data Science Node"]:::hardware
+        SENSORS(("Sensors:\nFire, Gas, Water, PIR")):::hardware
+        ACTUATORS(("Actuators:\nBuzzer, Relay, LEDs")):::hardware
     end
 
-    subgraph "Backend Tier (FastAPI)"
-        API[REST API Ingestion `/api/zones/readings`]:::backend
-        RISK[Risk Fusion Engine\n& Validation Gate]:::backend
-        ML[Machine Learning\nPredictor]:::backend
-        NL[Natural Language\nParser (LLM Sim)]:::backend
-        WS[WebSocket Manager\nBroadcaster]:::backend
+    subgraph tier2 ["Backend Tier (FastAPI)"]
+        API["REST API Ingestion (/api/zones/readings)"]:::backend
+        RISK["Risk Fusion Engine & Validation Gate"]:::backend
+        ML["Machine Learning Predictor"]:::backend
+        NL["Natural Language Parser (LLM Sim)"]:::backend
+        WS["WebSocket Manager Broadcaster"]:::backend
     end
 
-    subgraph "Persistence Tier"
-        DB[(PostgreSQL\nRelational Database)]:::database
-        CACHE[(In-Memory Cache\nActuation State)]:::database
+    subgraph tier3 ["Persistence Tier"]
+        DB[("PostgreSQL Relational Database")]:::database
+        CACHE[("In-Memory Cache (Actuation State)")]:::database
     end
 
-    subgraph "Frontend Tier (Next.js)"
-        UI[Interactive Dashboard\nReact / Next.js]:::frontend
-        MAP[Live 2D Map\nWebSocket Client]:::frontend
-        REPORT[NL Report Input\nUI Component]:::frontend
+    subgraph tier4 ["Frontend Tier (Next.js)"]
+        UI["Interactive Dashboard (React / Next.js)"]:::frontend
+        MAP["Live 2D Map (WebSocket Client)"]:::frontend
+        REPORT["NL Report Input UI Component"]:::frontend
     end
 
     %% Edge Connections - Hardware to Backend
     SENSORS --> ESP1
     SENSORS --> ESP2
-    SENSORS --> ESP33
+    SENSORS --> ESP3
     ESP1 -- "HTTP POST (JSON)\nEvery 1s" --> API
     ESP2 -- "HTTP POST (JSON)\nEvery 1s" --> API
     ESP3 -- "HTTP POST (JSON)\nEvery 1s" --> API
