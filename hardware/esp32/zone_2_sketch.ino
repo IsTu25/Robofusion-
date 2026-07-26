@@ -6,9 +6,9 @@
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
 
-// UPDATE THIS WITH YOUR PINGGY URL
+// UPDATE THIS WITH YOUR TUNNEL URL (ngrok/pinggy/serveo)
 // Make sure it ends in /api/zones/2/readings/
-String serverName = "http://wmziw-103-165-163-195.free.pinggy.net/api/zones/2/readings/";
+String serverName = "http://f8f2ddffd474e60f-103-165-163-194.serveousercontent.com/api/zones/2/readings/";
 
 // Pin Definitions (Sensors)
 const int FIRE_PIN = 34; // Potentiometer 1
