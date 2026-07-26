@@ -31,6 +31,41 @@
       "top": -80,
       "left": -50,
       "attrs": { "color": "red", "label": "PIR Motion" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_green",
+      "top": -80,
+      "left": 100,
+      "attrs": { "color": "green", "label": "Safe" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_yellow",
+      "top": -80,
+      "left": 150,
+      "attrs": { "color": "yellow", "label": "Warning" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_red",
+      "top": -80,
+      "left": 200,
+      "attrs": { "color": "red", "label": "Critical" }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": -80,
+      "left": 250,
+      "attrs": { "label": "Alarm" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay",
+      "top": 120,
+      "left": 200,
+      "attrs": {}
     }
   ],
   "connections": [
@@ -50,7 +85,23 @@
     [ "pot3:SIG", "esp:32", "blue", [ "v0" ] ],
     
     [ "btn1:1.l", "esp:GND.2", "black", [ "v0" ] ],
-    [ "btn1:2.l", "esp:33", "yellow", [ "v0" ] ]
+    [ "btn1:2.l", "esp:33", "yellow", [ "v0" ] ],
+
+    [ "led_green:C", "esp:GND.2", "black", [ "v0" ] ],
+    [ "led_green:A", "esp:27", "green", [ "v0" ] ],
+
+    [ "led_yellow:C", "esp:GND.2", "black", [ "v0" ] ],
+    [ "led_yellow:A", "esp:14", "yellow", [ "v0" ] ],
+
+    [ "led_red:C", "esp:GND.2", "black", [ "v0" ] ],
+    [ "led_red:A", "esp:12", "red", [ "v0" ] ],
+
+    [ "buzzer:2", "esp:GND.2", "black", [ "v0" ] ],
+    [ "buzzer:1", "esp:25", "purple", [ "v0" ] ],
+
+    [ "relay:GND", "esp:GND.2", "black", [ "v0" ] ],
+    [ "relay:VCC", "esp:5V", "red", [ "v0" ] ],
+    [ "relay:IN", "esp:26", "orange", [ "v0" ] ]
   ],
   "dependencies": {}
 }

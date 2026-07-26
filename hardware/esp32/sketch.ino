@@ -8,7 +8,7 @@ const char* password = "";
 
 // UPDATE THIS WITH YOUR URL
 // Make sure it ends in /api/zones/1/readings/
-String serverName = "http://modern-dragons-share.loca.lt/api/zones/1/readings/";
+String serverName = "http://empty-olives-slide.loca.lt/api/zones/1/readings/";
 
 // Pin Definitions (Sensors)
 const int FIRE_PIN = 34; // Potentiometer 1
