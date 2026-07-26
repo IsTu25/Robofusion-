@@ -12,13 +12,9 @@ async def process_reading(zone_id: int, payload: ReadingPayload, db: asyncpg.Con
         INSERT INTO readings 
         (zone_id, boot_id, sequence_number, fire_raw, gas_raw, water_raw, pir_raw, is_late, ms_since_boot, warmup)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        ON CONFLICT (zone_id, boot_id, sequence_number) DO NOTHING
         RETURNING id
     """, zone_id, str(payload.boot_id), payload.sequence_number, payload.fire_raw, payload.gas_raw, 
          payload.water_raw, payload.pir_raw, payload.is_late, payload.ms_since_boot, payload.warmup)
-
-    if inserted_id is None:
-        return # Duplicate, ignore
 
     # 3. Late reading bypass: DO NOT process risk or trigger incidents
     if payload.is_late:

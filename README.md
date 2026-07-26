@@ -35,41 +35,7 @@ Instead of traditional polling architectures, Sentinel Core utilizes **WebSocket
 
 ## 🏗 Architecture
 
-```mermaid
-flowchart TD
-    %% Styling
-    classDef hardware fill:#e74c3c,stroke:#c0392b,color:#fff,stroke-width:2px
-    classDef backend fill:#2ecc71,stroke:#27ae60,color:#fff,stroke-width:2px
-    classDef database fill:#3498db,stroke:#2980b9,color:#fff,stroke-width:2px
-    classDef frontend fill:#9b59b6,stroke:#8e44ad,color:#fff,stroke-width:2px
-
-    %% Components
-    SENSORS(("Physical Sensors\n(Fire, Gas, Water, Motion)")):::hardware
-    ESP["ESP32 Microcontrollers\n(Wokwi Simulation)"]:::hardware
-    
-    API["FastAPI Backend\n(Ingestion & Routing)"]:::backend
-    RISK["Risk Fusion Engine\n(Weights & ML Predictor)"]:::backend
-    WS["WebSocket Manager"]:::backend
-    
-    DB[("PostgreSQL Database\n(Incidents & History)")]:::database
-    
-    UI["Next.js Dashboard\n(Live Map & Alerts)"]:::frontend
-    ACTUATORS(("Local Actuators\n(Relay, Buzzer, LEDs)")):::hardware
-
-    %% Flow
-    SENSORS --> ESP
-    ESP -- "JSON Payload (1 Hz)" --> API
-    API --> RISK
-    
-    RISK -- "Saves State" --> DB
-    RISK -- "Broadcasts Events" --> WS
-    
-    WS -- "Live Updates" --> UI
-    
-    %% Feedback Loop
-    API -. "Returns Alarm States" .-> ESP
-    ESP --> ACTUATORS
-```
+![System Architecture](frontend/public/architecture.png)
 
 ---
 
@@ -77,42 +43,7 @@ flowchart TD
 
 The database is fully normalized to **3NF** with strict referential integrity (`ON DELETE RESTRICT`), optimized partial indexes for incident querying, and race-condition prevention via `UNIQUE` constraints.
 
-```mermaid
-erDiagram
-    ZONES ||--o{ READINGS : logs
-    ZONES ||--o{ INCIDENTS : suffers
-    ZONES ||--o{ EVENTS : tracks
-    ZONES {
-        int id PK
-        string name
-        string status "SAFE | WARNING | CRITICAL"
-    }
-    
-    INCIDENTS ||--o{ EVENTS : generates
-    INCIDENTS {
-        int id PK
-        int zone_id FK
-        string severity
-        string status "ACTIVE | ACKNOWLEDGED | RESOLVED"
-        float risk_score_at_trigger
-    }
-
-    READINGS {
-        int id PK
-        int zone_id FK
-        uuid boot_id
-        int sequence_number
-        float fire_raw
-        float gas_raw
-    }
-
-    USERS_ROLES ||--o{ EVENTS : triggers
-    USERS_ROLES {
-        int id PK
-        string username
-        string role "ADMIN | STAFF"
-    }
-```
+![Database ERD Diagram](frontend/public/erd.png)
 
 ---
 

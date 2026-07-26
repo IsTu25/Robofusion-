@@ -5,10 +5,10 @@ export class DashboardWebSocket {
   private url: string;
   private token: string;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
   private baseReconnectDelay = 1000;
   private listeners: Set<MessageCallback> = new Set();
   private intentionalClose = false;
+  private pingInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(token: string) {
     this.token = token;
@@ -22,11 +22,19 @@ export class DashboardWebSocket {
 
   connect() {
     this.intentionalClose = false;
+    
+    // Clean up any existing connection
+    if (this.ws) {
+      try { this.ws.close(); } catch {}
+      this.ws = null;
+    }
+    
     this.ws = new WebSocket(this.url);
 
     this.ws.onopen = () => {
       console.log("WebSocket connected to dashboard");
-      this.reconnectAttempts = 0;
+      this.reconnectAttempts = 0; // Reset on successful connection
+      this.startPing();
     };
 
     this.ws.onmessage = (event) => {
@@ -40,6 +48,7 @@ export class DashboardWebSocket {
 
     this.ws.onclose = () => {
       console.log("WebSocket disconnected");
+      this.stopPing();
       if (!this.intentionalClose) {
         this.reconnect();
       }
@@ -59,18 +68,43 @@ export class DashboardWebSocket {
     };
   }
 
+  private startPing() {
+    this.stopPing();
+    // Send a ping every 25 seconds to keep the connection alive through proxies/tunnels
+    this.pingInterval = setInterval(() => {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        try {
+          this.ws.send("ping");
+        } catch {
+          // Will trigger onclose -> reconnect
+        }
+      }
+    }, 25000);
+  }
+
+  private stopPing() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
+  }
+
   private reconnect() {
-    const delay = this.baseReconnectDelay * Math.pow(2, Math.min(this.reconnectAttempts, 5));
-    console.log(`Reconnecting in ${delay}ms...`);
+    // Always reconnect — never give up (capped at 30s delay)
+    const delay = Math.min(30000, this.baseReconnectDelay * Math.pow(2, Math.min(this.reconnectAttempts, 4)));
+    console.log(`WebSocket reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1})...`);
     this.reconnectAttempts++;
 
     setTimeout(() => {
-      this.connect();
+      if (!this.intentionalClose) {
+        this.connect();
+      }
     }, delay);
   }
 
   disconnect() {
     this.intentionalClose = true;
+    this.stopPing();
     if (this.ws) {
       this.ws.close();
       this.ws = null;

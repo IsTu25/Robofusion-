@@ -55,8 +55,7 @@ CREATE TABLE readings (
     sequence_number INTEGER NOT NULL,
     ms_since_boot BIGINT,
     sensor_timestamp TIMESTAMPTZ,      -- NULLABLE, computed by backend
-    received_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(zone_id, boot_id, sequence_number)
+    received_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 6. Incidents

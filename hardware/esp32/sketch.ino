@@ -6,9 +6,9 @@
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
 
-// UPDATE THIS WITH YOUR URL
+// UPDATE THIS WITH YOUR PINGGY URL
 // Make sure it ends in /api/zones/1/readings/
-String serverName = "http://highf-103-165-163-193.free.pinggy.net/api/zones/1/readings/";
+String serverName = "http://wmziw-103-165-163-195.free.pinggy.net/api/zones/1/readings/";
 
 // Pin Definitions (Sensors)
 const int FIRE_PIN = 34; // Potentiometer 1
@@ -92,9 +92,9 @@ void loop() {
     HTTPClient http;
       
     http.begin(serverName);
+    http.setTimeout(15000); // 15 second timeout to fix error code -11
     http.addHeader("Content-Type", "application/json");
     http.addHeader("X-Zone-API-Key", "key_iot_123"); // Required by backend
-    http.addHeader("bypass-tunnel-reminder", "true"); // Required by localtunnel
     http.addHeader("ngrok-skip-browser-warning", "true"); // Required by ngrok
 
     // Must match BatchReadingPayload exactly
