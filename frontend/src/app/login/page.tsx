@@ -51,7 +51,7 @@ export default function LoginPage() {
       background: 'var(--bg-primary)'
     }}>
       <div className="glass-panel" style={{ padding: '40px', width: '100%', maxWidth: '400px' }}>
-        <h1 className="text-gradient" style={{ marginBottom: '8px', fontSize: '28px', textAlign: 'center' }}>RoboFusion</h1>
+        <h1 className="text-gradient" style={{ marginBottom: '8px', fontSize: '28px', textAlign: 'center' }}>Sentinel Core</h1>
         <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '32px' }}>
           Enter your credentials to access the dashboard.
         </p>

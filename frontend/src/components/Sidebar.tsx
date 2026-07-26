@@ -13,7 +13,7 @@ export function Sidebar() {
     <aside className="dashboard-sidebar">
       <div style={{ marginBottom: '50px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{ width: '32px', height: '32px', background: 'var(--brand-primary)', borderRadius: '8px', boxShadow: '0 0 15px var(--brand-primary-glow)' }}></div>
-        <h2 className="text-gradient-brand" style={{ fontSize: '1.6rem', letterSpacing: '0.05em' }}>RoboFusion</h2>
+        <h2 className="text-gradient-brand" style={{ fontSize: '1.6rem', letterSpacing: '0.05em' }}>Sentinel Core</h2>
       </div>
       
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>

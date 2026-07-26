@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
     task.cancel()
     await close_db_pool()
 
-app = FastAPI(title="RoboFusion API", lifespan=lifespan)
+app = FastAPI(title="Sentinel Core API", lifespan=lifespan)
 
 # CORS configuration
 app.add_middleware(

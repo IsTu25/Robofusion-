@@ -6,7 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "RoboFusion Dashboard",
+  title: "Sentinel Core Dashboard",
   description: "Real-time robotics monitoring dashboard.",
 };
 

@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🔥 RoboFusion IoT Hazard Monitoring System</h1>
+  <h1>🔥 Sentinel Core IoT Hazard Monitoring System</h1>
   <p><strong>Next-Generation, Real-Time Industrial Hazard Detection & Mitigation</strong></p>
   
   <p>
@@ -27,9 +27,9 @@
 
 ## 🔭 System Overview
 
-RoboFusion is a highly concurrent, event-driven IoT architecture designed to detect, track, and mitigate industrial hazards (Fire, Gas, Water leaks) in real-time. 
+Sentinel Core is a highly concurrent, event-driven IoT architecture designed to detect, track, and mitigate industrial hazards (Fire, Gas, Water leaks) in real-time. 
 
-Instead of traditional polling architectures, RoboFusion utilizes **WebSocket telemetry streams**, **Machine Learning risk prediction**, and **Asynchronous Postgres connection pooling** to process thousands of sensor readings per second and trigger hardware actuators (Buzzers, Relays, Sprinklers) with sub-100ms latency.
+Instead of traditional polling architectures, Sentinel Core utilizes **WebSocket telemetry streams**, **Machine Learning risk prediction**, and **Asynchronous Postgres connection pooling** to process thousands of sensor readings per second and trigger hardware actuators (Buzzers, Relays, Sprinklers) with sub-100ms latency.
 
 ---
 
