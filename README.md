@@ -127,4 +127,4 @@ A fully auto-generated OpenAPI (Swagger) interface is available at `/docs` when 
 | `POST` | `/api/nl-report` | Natural Language emergency parser. | Bearer Token (Staff/Admin) |
 
 ---
-*Built by Team Antigravity.*
+*Built by Team Md Isfak Iqbal Chowdhury.*
