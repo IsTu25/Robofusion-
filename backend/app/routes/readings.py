@@ -21,4 +21,12 @@ async def ingest_readings(
     for reading in payload.readings:
         await process_reading(zone.id, reading, db)
     
-    return {"status": "success", "processed": len(payload.readings)}
+    # Fetch the latest actuation state from cache to return to the ESP32
+    from app.cache import get_zone_actuation
+    actuation = get_zone_actuation(zone.id)
+    
+    return {
+        "status": "success", 
+        "processed": len(payload.readings),
+        "actuation": actuation
+    }

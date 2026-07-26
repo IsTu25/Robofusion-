@@ -1,94 +1,58 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { ZoneCard, Zone } from './ZoneCard';
+import { ZoneCard } from './ZoneCard';
+import { ZoneModal } from './ZoneModal';
 import { fetchApi } from '@/lib/api';
-import { DashboardWebSocket } from '@/lib/ws';
-import { useAuth } from '@/context/AuthContext';
+
+export interface Zone {
+  id: number;
+  name: string;
+  status: 'SAFE' | 'WARNING' | 'CRITICAL' | 'OFFLINE';
+  is_active: boolean;
+  fire_raw?: number;
+  gas_raw?: number;
+  water_raw?: number;
+  pir_raw?: boolean;
+  risk_score?: number;
+  trend?: 'INSUFFICIENT_DATA' | 'TRENDING_UP' | 'TRENDING_DOWN' | 'STABLE';
+  ml_prob?: number;
+}
+import { useZones } from '@/hooks/useZones';
 
 export function ZoneGrid() {
-  const [zones, setZones] = useState<Zone[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const { token } = useAuth();
-
-  useEffect(() => {
-    // 1. Initial Fetch
-    const loadInitialZones = async () => {
-      try {
-        const data = await fetchApi('/api/zones/');
-        setZones(data.zones);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load zones');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadInitialZones();
-  }, []);
-
-  useEffect(() => {
-    if (!token) return;
-
-    // 2. Setup WebSocket
-    const ws = new DashboardWebSocket(token);
-    
-    const unsubscribe = ws.subscribe((message) => {
-      console.log("WS MESSAGE RECEIVED:", message);
-      if (message.type === 'READING_PROCESSED') {
-        setZones(prev => prev.map(z => 
-          z.id === message.zone_id 
-            ? { 
-                ...z, 
-                fire_raw: message.fire_raw, 
-                gas_raw: message.gas_raw, 
-                water_raw: message.water_raw, 
-                pir_raw: message.pir_raw,
-                risk_score: message.risk_score,
-                status: message.status
-              }
-            : z
-        ));
-      } else if (message.type === 'ZONE_STATUS_CHANGED') {
-        setZones(prev => prev.map(z => 
-          z.id === message.zone_id 
-            ? { ...z, status: message.new_status, risk_score: message.risk_score }
-            : z
-        ));
-      } else if (message.type === 'ML_PREDICTION') {
-        setZones(prev => prev.map(z => 
-          z.id === message.zone_id 
-            ? { ...z, ml_prob: message.critical_probability }
-            : z
-        ));
-      }
-    });
-
-    ws.connect();
-
-    return () => {
-      unsubscribe();
-      ws.disconnect();
-    };
-  }, [token]);
+  const { zones, loading, error } = useZones();
+  const [selectedZoneId, setSelectedZoneId] = useState<number | null>(null);
 
   if (loading) return <div style={{ color: 'var(--text-secondary)' }}>Loading grid...</div>;
   if (error) return <div style={{ color: 'var(--color-critical)' }}>Error: {error}</div>;
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-      gap: '24px'
-    }}>
-      {zones.length === 0 ? (
-        <div style={{ color: 'var(--text-secondary)' }}>No zones found.</div>
-      ) : (
-        zones.map(zone => (
-          <ZoneCard key={zone.id} zone={zone} />
-        ))
+    <>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+        gap: '32px'
+      }}>
+        {zones.length === 0 ? (
+          <div style={{ color: 'var(--text-secondary)' }}>No zones found.</div>
+        ) : (
+          zones.map(zone => (
+            <ZoneCard 
+              key={zone.id} 
+              zone={zone} 
+              onClick={(z) => setSelectedZoneId(z.id)} 
+            />
+          ))
+        )}
+      </div>
+
+      {selectedZoneId && (
+        <ZoneModal 
+          zone={zones.find(z => z.id === selectedZoneId)!} 
+          onClose={() => setSelectedZoneId(null)} 
+        />
       )}
-    </div>
+    </>
   );
 }

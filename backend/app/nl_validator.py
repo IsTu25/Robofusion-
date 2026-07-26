@@ -11,12 +11,24 @@ async def parse_and_validate_nl(text: str, db: asyncpg.Connection):
     """
     text_lower = text.lower()
     
+    zone_id = None
+    
     # Extract Zone ID (e.g., "zone 1", "zone 12")
     zone_match = re.search(r'zone\s*(\d+)', text_lower)
-    if not zone_match:
-        return {"success": False, "error": "Could not identify a specific Zone in the report. Please use 'Zone X'."}
-        
-    zone_id = int(zone_match.group(1))
+    if zone_match:
+        zone_id = int(zone_match.group(1))
+    else:
+        # Try natural names
+        if 'iot lab' in text_lower or 'iot' in text_lower:
+            zone_id = 1
+        elif 'server room' in text_lower or 'server' in text_lower:
+            zone_id = 2
+        elif 'data science' in text_lower or 'data lab' in text_lower:
+            zone_id = 3
+            
+    if not zone_id:
+        return {"success": False, "error": "Could not identify a specific Zone in the report. Please use 'Zone X' or the lab name (e.g. 'Server Room')."}
+
     
     # Verify zone exists
     zone = await db.fetchrow("SELECT id, name FROM zones WHERE id = $1 AND is_active = true", zone_id)

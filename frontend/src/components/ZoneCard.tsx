@@ -1,109 +1,38 @@
-import React, { useState } from 'react';
-import { fetchApi } from '@/lib/api';
-import { TrendIndicator } from './TrendIndicator';
-import { MLPanel } from './MLPanel';
-export interface Zone {
-  id: number;
-  name: string;
-  status: 'SAFE' | 'WARNING' | 'CRITICAL' | 'OFFLINE';
-  is_active: boolean;
-  fire_raw?: number;
-  gas_raw?: number;
-  water_raw?: number;
-  pir_raw?: boolean;
-  risk_score?: number;
-  trend?: 'INSUFFICIENT_DATA' | 'TRENDING_UP' | 'TRENDING_DOWN' | 'STABLE';
-  ml_prob?: number;
-}
+import React from 'react';
+import { Zone } from './ZoneGrid'; // Will export Zone from ZoneGrid
 
-export function ZoneCard({ zone }: { zone: Zone }) {
-  const [showMenu, setShowMenu] = useState(false);
-  const [loading, setLoading] = useState(false);
-  
+export function ZoneCard({ zone, onClick }: { zone: Zone, onClick: (zone: Zone) => void }) {
   const isCritical = zone.status === 'CRITICAL';
   
-  const handleOverride = async (duration: number) => {
-    setLoading(true);
-    setShowMenu(false);
-    try {
-      await fetchApi(`/api/zones/${zone.id}/override`, {
-        method: 'POST',
-        body: JSON.stringify({
-          duration_minutes: duration,
-          target_status: 'SAFE'
-        })
-      });
-      // The WS will automatically push the state change to us!
-    } catch (err) {
-      console.error("Failed to override zone", err);
-      alert("Override failed");
-    } finally {
-      setLoading(false);
-    }
+  // Function to map zone name to image
+  const getZoneImage = (name: string) => {
+    const lower = name.toLowerCase();
+    if (lower.includes('iot')) return '/iot_lab.png';
+    if (lower.includes('server')) return '/server_room.png';
+    if (lower.includes('data')) return '/data_science_lab.png';
+    return '/iot_lab.png'; // Fallback
   };
 
   return (
-    <div className={`glass-panel ${isCritical ? 'animate-pulse-red' : ''}`} style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{zone.name}</h3>
+    <div 
+      className={`image-card ${isCritical ? 'animate-pulse-red' : ''}`} 
+      onClick={() => onClick(zone)}
+      style={{
+        backgroundImage: `url(${getZoneImage(zone.name)})`,
+      }}
+    >
+      <div className="image-card-footer">
+        <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+          {zone.name}
+        </h3>
+        
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <div className={`status-indicator status-${zone.status.toLowerCase()}`}>
+          <div className={`status-indicator status-${zone.status.toLowerCase()}`} style={{ background: 'rgba(0,0,0,0.5)', padding: '6px 12px', borderRadius: '20px', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="status-dot"></div>
             {zone.status}
           </div>
-          
-          <div style={{ position: 'relative' }}>
-            <button 
-              onClick={() => setShowMenu(!showMenu)}
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px' }}
-              disabled={loading}
-            >
-              ⚙️
-            </button>
-            
-            {showMenu && (
-              <div className="glass-panel" style={{ 
-                position: 'absolute', 
-                right: 0, 
-                top: '100%', 
-                zIndex: 10, 
-                minWidth: '200px', 
-                padding: '8px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px'
-              }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', padding: '4px 8px' }}>Manual Override</div>
-                <button className="glass-button" onClick={() => handleOverride(15)} style={{ textAlign: 'left', fontSize: '0.85rem', padding: '6px 8px' }}>
-                  Force SAFE (15m)
-                </button>
-                <button className="glass-button" onClick={() => handleOverride(60)} style={{ textAlign: 'left', fontSize: '0.85rem', padding: '6px 8px' }}>
-                  Force SAFE (60m)
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </div>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-        <div>🔥 Fire: {zone.fire_raw != null ? zone.fire_raw.toFixed(1) : '-'}</div>
-        <div>💨 Gas: {zone.gas_raw != null ? zone.gas_raw.toFixed(1) : '-'}</div>
-        <div>💧 Water: {zone.water_raw != null ? zone.water_raw.toFixed(1) : '-'}</div>
-        <div>🏃 PIR: {zone.pir_raw != null ? (zone.pir_raw ? 'YES' : 'NO') : '-'}</div>
-      </div>
-      
-      <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-color)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>Risk Score</span>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <TrendIndicator trend={zone.trend} />
-          <span style={{ fontWeight: 'bold', color: isCritical ? 'var(--color-critical)' : 'inherit' }}>
-            {zone.risk_score != null ? zone.risk_score.toFixed(1) : '-'}
-          </span>
-        </div>
-      </div>
-      
-      <MLPanel prob={zone.ml_prob} />
     </div>
   );
 }

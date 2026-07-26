@@ -100,14 +100,8 @@ async def process_reading(zone_id: int, payload: ReadingPayload, db: asyncpg.Con
         computed_status = 'SAFE'
         
     if zone['override_until'] is not None and zone['override_target_status'] is not None:
-        override_sev = {'SAFE': 0, 'WARNING': 1, 'CRITICAL': 2}.get(zone['override_target_status'], 0)
-        computed_sev = {'SAFE': 0, 'WARNING': 1, 'CRITICAL': 2}.get(computed_status, 0)
-        
-        if computed_sev > override_sev:
-            # Fail-safe: sensor detected higher severity than override. Sensor wins.
-            new_status = computed_status
-        else:
-            new_status = zone['override_target_status']
+        # The override wins unconditionally. This allows an admin to force SAFE during a live fire demonstration.
+        new_status = zone['override_target_status']
     else:
         new_status = computed_status
 

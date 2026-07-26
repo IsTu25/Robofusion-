@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from app.db import pool
+import app.db
 
 logger = logging.getLogger(__name__)
 
@@ -8,8 +8,8 @@ async def auto_resolve_incidents():
     """Background task to auto-resolve incidents when a zone returns to SAFE for 10 seconds."""
     while True:
         try:
-            if pool:
-                async with pool.acquire() as db:
+            if app.db.pool:
+                async with app.db.pool.acquire() as db:
                     # Find zones that have been SAFE for more than 10 seconds but have ACTIVE incidents
                     # Also handles resolving active overrides that have expired
                     

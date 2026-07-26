@@ -40,29 +40,20 @@ export function NLReportInput() {
         Example: "I smell a gas leak in Zone 1, severity 90"
       </p>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '12px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '16px' }}>
         <input
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type your observation here..."
           disabled={loading}
-          style={{
-            flex: 1,
-            padding: '12px 16px',
-            borderRadius: '8px',
-            border: '1px solid var(--border-color)',
-            background: 'rgba(255, 255, 255, 0.05)',
-            color: 'var(--text-primary)',
-            fontSize: '1rem',
-            outline: 'none'
-          }}
+          className="glass-input"
         />
         <button 
           type="submit" 
           disabled={loading}
-          className="glass-button"
-          style={{ padding: '0 24px', fontWeight: 'bold' }}
+          className="glass-button primary"
+          style={{ padding: '0 32px', fontWeight: '600', letterSpacing: '0.05em' }}
         >
           {loading ? 'Processing...' : 'Report'}
         </button>

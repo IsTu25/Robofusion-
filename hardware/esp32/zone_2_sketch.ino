@@ -8,13 +8,20 @@ const char* password = "";
 
 // UPDATE THIS WITH YOUR URL
 // Make sure it ends in /api/zones/2/readings/
-String serverName = "http://giant-books-think.loca.lt/api/zones/2/readings/";
+String serverName = "http://modern-dragons-share.loca.lt/api/zones/2/readings/";
 
-// Pin Definitions
+// Pin Definitions (Sensors)
 const int FIRE_PIN = 34; // Potentiometer 1
 const int GAS_PIN = 35;  // Potentiometer 2
 const int WATER_PIN = 32; // Potentiometer 3
 const int PIR_PIN = 33;   // Push Button
+
+// Pin Definitions (Actuators - TC5)
+const int BUZZER_PIN = 25;
+const int RELAY_PIN = 26;
+const int LED_GREEN_PIN = 27;
+const int LED_YELLOW_PIN = 14;
+const int LED_RED_PIN = 12;
 
 String bootId;
 
@@ -27,10 +34,19 @@ void setup() {
   sprintf(uuidStr, "%08x-%04x-%04x-%04x-%04x%08x", r1, r2 >> 16, r2 & 0xFFFF, r3 >> 16, r3 & 0xFFFF, r4);
   bootId = String(uuidStr);
 
-
   Serial.begin(115200);
   
   pinMode(PIR_PIN, INPUT_PULLUP);
+  
+  // Setup Actuators
+  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(RELAY_PIN, OUTPUT);
+  pinMode(LED_GREEN_PIN, OUTPUT);
+  pinMode(LED_YELLOW_PIN, OUTPUT);
+  pinMode(LED_RED_PIN, OUTPUT);
+  
+  // Default to safe state (Green ON)
+  digitalWrite(LED_GREEN_PIN, HIGH);
 
   // Connect to WiFi
   WiFi.begin(ssid, password);
@@ -98,8 +114,23 @@ void loop() {
     int httpResponseCode = http.POST(jsonPayload);
     
     if (httpResponseCode > 0) {
-      Serial.print("HTTP Response code: ");
-      Serial.println(httpResponseCode);
+      String response = http.getString();
+      Serial.print("HTTP Response: ");
+      Serial.println(response);
+      
+      // TC5: Local Response & Actuation implementation
+      bool buzzer = response.indexOf("\"buzzer\": true") > 0 || response.indexOf("\"buzzer\":true") > 0;
+      bool relay = response.indexOf("\"relay\": true") > 0 || response.indexOf("\"relay\":true") > 0;
+      bool ledRed = response.indexOf("\"led_red\": true") > 0 || response.indexOf("\"led_red\":true") > 0;
+      bool ledYellow = response.indexOf("\"led_yellow\": true") > 0 || response.indexOf("\"led_yellow\":true") > 0;
+      bool ledGreen = response.indexOf("\"led_green\": true") > 0 || response.indexOf("\"led_green\":true") > 0;
+      
+      digitalWrite(BUZZER_PIN, buzzer ? HIGH : LOW);
+      digitalWrite(RELAY_PIN, relay ? HIGH : LOW);
+      digitalWrite(LED_RED_PIN, ledRed ? HIGH : LOW);
+      digitalWrite(LED_YELLOW_PIN, ledYellow ? HIGH : LOW);
+      digitalWrite(LED_GREEN_PIN, ledGreen ? HIGH : LOW);
+
     } else {
       Serial.print("Error code: ");
       Serial.println(httpResponseCode);

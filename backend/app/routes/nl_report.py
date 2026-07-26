@@ -24,29 +24,29 @@ async def submit_nl_report(request: NLReportRequest, admin: UserContext = Depend
         
     data = result['data']
     
-    # 2. Translate to artificial sensor payload
-    # We will simulate a reading that exactly triggers the severity they asked for.
-    # To do this cleanly, we'll zero out everything else and set the requested hazard to the severity level.
-    # We use high values to ensure it hits CRITICAL if they said severity 100
+    # 2. Translate to Zone Override
+    # Since the physical ESP32 sends real hardware data every 1 second, injecting a fake reading 
+    # would be instantly overwritten by the hardware's next "safe" reading before the UI can even update!
+    # To make the NL Report persist, we use the manual override system to lock the zone state.
     
-    # We should query the threshold first, but for simplicity, 
-    # we'll just inject the raw value. If they say severity 100, we'll inject 500 to guarantee a trip.
-    # Actually, we can just map severity 0-100 to raw 0-500.
+    target_status = 'CRITICAL' if data['severity'] >= 65 else ('WARNING' if data['severity'] >= 40 else 'SAFE')
     
-    raw_val = (data['severity'] / 100.0) * 500.0
-    
-    payload = ReadingPayload(
-        boot_id=uuid.uuid4(),
-        sequence_number=1, # Mock sequence
-        fire_raw=raw_val if data['hazard_type'] == 'fire' else 0.0,
-        gas_raw=raw_val if data['hazard_type'] == 'gas' else 0.0,
-        water_raw=raw_val if data['hazard_type'] == 'water' else 0.0,
-        pir_raw=True if data['hazard_type'] == 'pir' else False,
-        ms_since_boot=0
-    )
-    
-    # 3. Process it synchronously to trigger the risk engine
-    await process_reading(data['zone_id'], payload, db)
+    if target_status != 'SAFE':
+        await db.execute("""
+            UPDATE zones 
+            SET override_until = now() + interval '5 minutes',
+                override_target_status = $1
+            WHERE id = $2
+        """, target_status, data['zone_id'])
+        
+        # We process a dummy payload just to trigger the risk engine to broadcast the new override state immediately
+        payload = ReadingPayload(
+            boot_id=uuid.uuid4(),
+            sequence_number=1,
+            fire_raw=0.0, gas_raw=0.0, water_raw=0.0, pir_raw=False,
+            ms_since_boot=0
+        )
+        await process_reading(data['zone_id'], payload, db)
     
     return {
         "success": True,

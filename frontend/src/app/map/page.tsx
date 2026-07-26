@@ -3,12 +3,10 @@
 import { useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-import { ZoneGrid } from "@/components/ZoneGrid";
-import { NLReportInput } from "@/components/NLReportInput";
 import { Sidebar } from "@/components/Sidebar";
+import { MapClient } from "@/components/MapClient";
 
-export default function Dashboard() {
+export default function MapPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
@@ -36,18 +34,16 @@ export default function Dashboard() {
           boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
         }}>
           <div>
-            <h1 style={{ fontSize: '2.2rem', marginBottom: '4px', letterSpacing: '-0.02em' }}>System Overview</h1>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Live monitoring grid for campus facilities</div>
+            <h1 style={{ fontSize: '2.2rem', marginBottom: '4px', letterSpacing: '-0.02em' }}>Interactive Zone Map</h1>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Top-down view of all campus IoT endpoints</div>
           </div>
           <div className="status-indicator status-safe" style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '10px 20px' }}>
             <div className="status-dot"></div>
-            SYSTEM NORMAL
+            LIVE FEED
           </div>
         </header>
 
-        <NLReportInput />
-
-        <ZoneGrid />
+        <MapClient />
       </main>
     </div>
   );
